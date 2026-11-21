@@ -27,7 +27,10 @@ def cache_dir() -> Path:
 
 
 # Exact hosts only; unknown provider/CDN changes fail closed.
-ALLOWED_HOSTS = {"api.polyhaven.com", "dl.polyhaven.org", "ambientcg.com", "www.blenderkit.com"}
+ALLOWED_HOSTS = {
+    "api.polyhaven.com", "dl.polyhaven.org", "ambientcg.com", "www.blenderkit.com",
+    "acg-download.struffelproductions.com", "assets.blendkit.com",
+}
 MAX_JSON_BYTES = 32 * 1024 * 1024
 MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024
 

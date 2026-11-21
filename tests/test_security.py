@@ -31,6 +31,35 @@ def test_redirects_are_validated(monkeypatch):
         common.RestrictedRedirect().redirect_request(request, None, 302, '', {}, 'https://evil.test/')
 
 
+@pytest.mark.parametrize('host', ['acg-download.struffelproductions.com', 'assets.blendkit.com'])
+def test_provider_download_hosts_are_exact_and_public(host, monkeypatch):
+    monkeypatch.setattr(socket, 'getaddrinfo', lambda *a, **k: addresses('8.8.8.8'))
+    common.validate_url(f'https://{host}/asset')
+    for bad in (f'http://{host}/asset', f'https://{host}.evil.test/', f'https://user@{host}/',
+                f'https://{host}:444/', f'https://other.{host}/'):
+        with pytest.raises(ValueError):
+            common.validate_url(bad)
+    monkeypatch.setattr(socket, 'getaddrinfo', lambda *a, **k: addresses('127.0.0.1'))
+    with pytest.raises(ValueError):
+        common.validate_url(f'https://{host}/asset')
+
+
+def test_ambient_redirect_checks_destination_and_dns(monkeypatch):
+    monkeypatch.setattr(socket, 'getaddrinfo', lambda *a, **k: addresses('8.8.8.8'))
+    handler = common.RestrictedRedirect()
+    request = common.urllib.request.Request('https://ambientcg.com/get')
+    allowed = 'https://acg-download.struffelproductions.com/file/ambientCG-Web/download/asset.zip'
+    redirected = handler.redirect_request(request, None, 302, '', {}, allowed)
+    assert redirected.full_url == allowed
+    for bad in ('https://acg-download.struffelproductions.com.evil.test/file',
+                'http://acg-download.struffelproductions.com/file', 'https://127.0.0.1/file'):
+        with pytest.raises(ValueError):
+            handler.redirect_request(request, None, 302, '', {}, bad)
+    monkeypatch.setattr(socket, 'getaddrinfo', lambda *a, **k: addresses('192.168.0.1'))
+    with pytest.raises(ValueError):
+        handler.redirect_request(request, None, 302, '', {}, allowed)
+
+
 def test_download_limit_and_temporary_cleanup(tmp_path, monkeypatch):
     monkeypatch.setattr(common, 'MAX_DOWNLOAD_BYTES', 3)
     monkeypatch.setattr(common, 'open_url', lambda *a: io.BytesIO(b'1234'))

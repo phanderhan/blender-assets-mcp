@@ -8,11 +8,14 @@ snippets replace world nodes. Blender files and image decoders remain attack sur
 
 Requests use HTTPS and an exact host allowlist, check DNS results for public addresses,
 validate redirects, and ignore proxy environment variables. The allowlist currently
-contains api.polyhaven.com, dl.polyhaven.org, ambientcg.com, and www.blenderkit.com.
-Provider/CDN changes and BlenderKit signed downloads on other hosts fail closed.
-Only the Poly Haven download host and ambientCG API URL have been sampled; provider
-end-to-end downloads and redirect chains have not been verified. Verify host ownership
-and actual redirects before adding hosts. The DNS check and connection resolve
+contains api.polyhaven.com, dl.polyhaven.org, ambientcg.com, www.blenderkit.com,
+acg-download.struffelproductions.com and assets.blendkit.com. On 2026-11-21, the
+official ambientCG API's downloadLink redirected to the first additional host, and the
+official BlenderKit API returned a signed filePath on the second. The [ambientCG API
+documentation](https://docs.ambientcg.com/api/v2/) describes its download redirect.
+These observations verify provider use of these exact hosts, not independent ownership
+of the third-party ambientCG domain. Provider/CDN changes and signed downloads on other
+hosts fail closed. Verify provider use and actual redirects before adding hosts. The DNS check and connection resolve
 separately, so DNS rebinding remains possible. Enforce outbound network restrictions
 independently, including denial of private, loopback and link-local addresses.
 

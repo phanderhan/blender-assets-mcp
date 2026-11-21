@@ -35,6 +35,30 @@ This does not isolate the MCP client or Blender. Use a separately isolated Blend
 automatic script execution disabled and disposable scenes. Review generated code and
 files before use, and keep credentials and sensitive mounts out of both environments.
 
+### Provisioning Blender separately
+
+This repository does not provision a Blender VM or a Blender MCP server. To prepare one:
+
+1. Create a disposable GUI VM on Apple Silicon using an ARM64 guest OS and an updated
+   Blender build compatible with that guest. Confirm that the VM's graphics support is
+   adequate; software rendering may be required. Configure CPU, memory and disk limits.
+2. Use a separate unprivileged guest account. Do not share the host home directory,
+   credentials, Docker socket, SSH agent, clipboard or other unnecessary devices. Keep
+   the VM offline during asset inspection, or independently deny its network access.
+   Take a clean snapshot before importing untrusted files.
+3. Transfer only the intended asset files into the guest, or expose just the required
+   cache directory as a read-only share. Map it at the same absolute path used in the
+   returned code, or independently review and adjust paths for the guest. A read-only
+   share prevents guest writes but does not make the files safe.
+4. Disable Blender's automatic Python execution, including trusted-file exceptions;
+   launch with `--disable-autoexec` as an additional override. Use disposable scenes.
+   Review any generated Python separately before running it: disabling auto-execution
+   does not prevent a user or tool from manually executing code.
+5. Verify isolation and path mapping before importing an asset. If automated Blender
+   control is desired, separately design and review a narrowly scoped connection to
+   the guest; do not expose an unrestricted Python execution endpoint on the host or
+   LAN. Restore the clean snapshot when the trial is finished.
+
 ## Prepare storage and inspect
 
 1. Provision a dedicated private, size-limited host filesystem for the cache, such as
