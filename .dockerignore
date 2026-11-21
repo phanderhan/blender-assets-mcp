@@ -1,0 +1,11 @@
+**
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!src/
+!src/**
+!deployment/
+!deployment/firewall.Dockerfile
+!deployment/firewall.sh
+**/__pycache__/
+**/*.pyc

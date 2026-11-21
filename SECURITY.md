@@ -50,7 +50,8 @@ do not assume an ordinary host application firewall rule isolates one container.
 server container does not isolate Blender or the MCP client. Run Blender separately in
 a disposable VM or comparably restricted environment, without secrets or sensitive
 host mounts, and verify its network and file access independently. A disposable VM for
-both components is another option. Neither option has been configured or verified here.
+both components is another option. The complete deployment has not been configured or
+verified end to end.
 
 BlenderKit downloads require the requested asset ID and a known CC0 or royalty-free
 license. Free is not synonymous with CC0. Confirm the selected asset's license on its
@@ -67,6 +68,12 @@ artifacts against that lock, not publisher trust. Run tests with `uv sync --froz
 then `uv run --frozen pytest` and `uv run --frozen ruff check`. Do not register or
 start the server until the containment and network policy have been independently
 verified. The upstream MIT license remains unchanged.
+
+The reviewable Docker deployment and its verification procedure are in
+[deployment/README.md](deployment/README.md). Its firewall is independent of the
+application host allowlist but permits public IPv4 HTTPS generally; it is not a VPN or
+a domain-aware firewall. Surfshark routing, DNS and kill-switch behavior for Docker
+Desktop require separate verification on the target system.
 
 On 2026-11-21, an OSV batch query of all 41 original locked PyPI entries
 flagged certifi 2026.7.22 (GHSA-6q48-6c7w-9gw2); the lock was updated to
