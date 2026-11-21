@@ -4,7 +4,7 @@ import time
 import urllib.parse
 
 from . import snippets
-from .common import CC0, KINDS, asset_dir, cache_dir, download, get_json, inside, url_filename, words_matched
+from .common import CC0, KINDS, cache_dir, cached_asset, download, get_json, inside, url_filename, words_matched
 
 TYPES = {"model": "models", "material": "textures", "hdri": "hdris"}
 CATALOG_TTL = 86400
@@ -64,13 +64,20 @@ def fetch(asset_id: str, resolution: str) -> dict:
     if resolution not in by_res:
         raise ValueError(f"{asset_id} has no {resolution} file; available: {sorted(by_res)}")
     entry = by_res[resolution][fmt]
-    root = asset_dir("polyhaven", asset_id, resolution)
-    main = root / url_filename(entry["url"])
-    if not (root / ".complete").exists():
+    def populate(root):
+        main = inside(root, url_filename(entry["url"]))
         for rel, inc in entry.get("include", {}).items():
-            download(inc["url"], inside(root, rel))
+            target = inside(root, rel)
+            if target == main or target.exists():
+                raise ValueError("duplicate asset file")
+            download(inc["url"], target)
         download(entry["url"], main)
-        (root / ".complete").touch()
+        return str(main.relative_to(root))
+
+    provenance = {"kind": kind, "license": CC0, "name": info.get("name", asset_id),
+                  "authors": list(info.get("authors", {}))}
+    root, main_rel = cached_asset("polyhaven", asset_id, resolution, provenance, populate)
+    main = inside(root, main_rel)
     name = info.get("name", asset_id)
     if kind == "hdri":
         code = snippets.set_world_hdri(main)

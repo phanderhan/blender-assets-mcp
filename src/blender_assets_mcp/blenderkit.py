@@ -6,7 +6,7 @@ would serve them, so agents can't pull something that needs a subscription.
 import uuid
 
 from . import snippets
-from .common import CC0, asset_dir, download, get_json, url_filename
+from .common import CC0, cached_asset, download, get_json, inside, url_filename
 
 API = "https://www.blenderkit.com/api/v1"
 TYPES = {"model": "model", "material": "material", "hdri": "hdr"}
@@ -52,7 +52,11 @@ def fetch(asset_id: str, resolution: str) -> dict:
     if not found:
         raise ValueError(f"unknown BlenderKit asset: {asset_id}")
     asset = found[0]
-    if not asset.get("isFree"):
+    if asset.get("assetBaseId") != asset_id:
+        raise ValueError("BlenderKit asset identity mismatch")
+    if asset.get("license") not in LICENSES:
+        raise ValueError("unknown BlenderKit asset license")
+    if asset.get("isFree") is not True:
         raise ValueError(f"{asset['name']} is not a free BlenderKit asset; only free assets are allowed")
     kind = KINDS.get(asset["assetType"])
     if kind is None:
@@ -61,15 +65,17 @@ def fetch(asset_id: str, resolution: str) -> dict:
     file_type = "blend" if resolution == "original" else "resolution_" + resolution.upper().replace(".", "_")
     if file_type not in files:
         file_type = "blend"  # assets without downscaled variants
-    root = asset_dir("blenderkit", asset_id, resolution)
-    marker = root / ".complete"
-    if marker.exists():
-        main = root / marker.read_text().strip()
-    else:
+    def populate(root):
         # The API answers with a short-lived signed URL; any scene id works for anonymous downloads.
         signed = get_json(files[file_type], {"scene_uuid": str(uuid.uuid4())})["filePath"]
         main = download(signed, root / url_filename(signed))
-        marker.write_text(main.name)
+        return str(main.relative_to(root))
+
+    provenance = {"kind": kind, "license": asset["license"], "file_type": file_type,
+                  "version": asset.get("id"), "name": asset.get("name", asset_id),
+                  "author": (asset.get("author") or {}).get("fullName", "unknown")}
+    root, main_rel = cached_asset("blenderkit", asset_id, resolution, provenance, populate)
+    main = inside(root, main_rel)
     name = asset.get("name", asset_id)
     # HDRI "resolution" files are plain .exr images, whatever their file type says.
     if kind == "hdri" or main.suffix.lower() in (".exr", ".hdr"):

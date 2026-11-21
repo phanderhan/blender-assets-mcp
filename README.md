@@ -13,45 +13,21 @@ No account or API key is needed. Free BlenderKit assets download anonymously. Th
 refuses paid BlenderKit assets, even if the API would serve them.
 
 The server doesn't control Blender itself. Each download returns a short Python script, and
-the agent runs it with whatever Blender MCP it already has, such as the
+review it independently before using it with a Blender tool, such as the
 [Blender Lab MCP server](https://www.blender.org/lab/mcp-server/) or
 [MCP for Blender](https://github.com/ahujasid/blender-mcp) (both have an
 `execute_blender_code` tool). That keeps this server small and lets it work with either one.
 
 ## Install
 
-You need [uv](https://docs.astral.sh/uv/). Run it straight from GitHub:
-
-```sh
-uvx --from git+https://github.com/TimotheFCN/blender-assets-mcp blender-assets-mcp
-```
-
-Or install it once and get a `blender-assets-mcp` command:
-
-```sh
-uv tool install git+https://github.com/TimotheFCN/blender-assets-mcp
-```
-
-### Claude Code
-
-```sh
-claude mcp add --scope user blender_assets -- uvx --from git+https://github.com/TimotheFCN/blender-assets-mcp blender-assets-mcp
-```
-
-### Codex
-
-In `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.blender_assets]
-command = "uvx"
-args = ["--from", "git+https://github.com/TimotheFCN/blender-assets-mcp", "blender-assets-mcp"]
-tool_timeout_sec = 300  # large downloads can take longer than the 60 s default
-```
+Use the reviewed local checkout and its lockfile: `uv sync --frozen --no-dev`.
+Review [SECURITY.md](SECURITY.md) before deployment. Do not use an unpinned Git
+installation. Register the local environment's executable only after configuring
+containment and verifying provider network access.
 
 ### Other clients
 
-Any MCP client that starts stdio servers works. Use the same command and arguments.
+Any MCP client that starts stdio servers works. Use the executable from the reviewed local environment.
 
 ## Tools
 
@@ -101,8 +77,8 @@ Asset libraries send back file paths, and ambientCG sends zip archives. The serv
 path that would land outside the asset's cache folder, so a crafted `../` entry can't write
 elsewhere on disk.
 
-The returned `blender_python` only loads files from the cache. Still, it is code that runs
-in your Blender, so read it if you're not sure.
+Review returned `blender_python` before execution, and treat downloaded files as untrusted.
+See SECURITY.md for limits and remaining risks.
 
 ## Development
 

@@ -24,7 +24,7 @@ blender-assets-mcp = "blender_assets_mcp.server:main"
 dev = ["pytest>=8", "ruff>=0.6"]
 
 [build-system]
-requires = ["uv_build>=0.9,<0.14"]
+requires = ["uv_build==0.13.8"]
 build-backend = "uv_build"
 
 [tool.ruff]
